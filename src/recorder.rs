@@ -68,6 +68,7 @@ impl RadikoPlayer {
             "https://radiko.jp/v2/api/ts/playlist.m3u8?station_id={}&l=15&ft={}&to={}",
             station_id, ft, to
         );
+        println!("stream_url: {}", stream_url);
 
         // ffmpeg用のヘッダー（ここではX-Radiko-AuthTokenを指定）
         let auth_token = self

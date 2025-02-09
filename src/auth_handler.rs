@@ -20,7 +20,7 @@ impl RadikoAuthHandler {
     /// Radiko の認可キー（固定値）
     const RADIKO_AUTH_KEY: &'static [u8] = b"bcd151073c03b352e1ef2fd66c32209da9ca0afa";
 
-    /// コンストラクタ  
+    /// コンストラクタ
     /// `area_id` に指定されたエリアIDを使い、認可処理を実行する。
     pub fn new(area_id: &str) -> Result<Self, Box<dyn Error>> {
         // 初期ヘッダの設定
@@ -68,7 +68,7 @@ impl RadikoAuthHandler {
         Ok(())
     }
 
-    /// 指定された API URL に対して認可リクエストを送信する  
+    /// RadikoAPIに認可リクエストを送信する
     /// タイムアウトは 5 秒、リクエスト後に 1 秒のスリープを行う。
     fn call_auth_api(&self, api_url: &str) -> Result<Response, Box<dyn Error>> {
         // タイムアウト付きのクライアントを作成
