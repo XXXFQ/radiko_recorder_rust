@@ -1093,7 +1093,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "radiko_recorder"
+name = "radiko_recorder_rust"
 version = "0.1.0"
 dependencies = [
  "assert_cmd",
