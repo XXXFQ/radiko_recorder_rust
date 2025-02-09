@@ -6,7 +6,9 @@
             "request": "launch",
             "name": "Rust Debug Launch",
             "program": "${workspaceRoot}/target/debug/${workspaceRootFolderName}",
-            "args": [],
+            "args": [
+                "-a", "JP13", "FMT", "20250207120000", "30"
+            ],
             "cwd": "${workspaceRoot}/target/debug/",
             "sourceLanguages": ["rust"]
         }

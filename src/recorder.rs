@@ -6,6 +6,7 @@ use serde::Deserialize;
 use std::collections::HashMap;
 use std::process::Command;
 use std::error::Error;
+use std::process::ExitStatus;
 
 use crate::auth_handler::RadikoAuthHandler;
 
@@ -37,7 +38,7 @@ impl RadikoPlayer {
     /// # 引数
     /// - `area_id`: RadikoのエリアID
     pub fn new(area_id: &str) -> Self {
-        let headers = Self::make_headers(area_id);
+        let headers: HashMap<String, String> = Self::make_headers(area_id);
         Self {
             area_id: area_id.to_string(),
             headers,
@@ -59,28 +60,27 @@ impl RadikoPlayer {
         output_path: &str,
     ) -> Result<(), Box<dyn Error>> {
         // 開始時刻、終了時刻をフォーマット
-        let ft = Self::format_datetime(start_time);
-        let end_time = start_time + Duration::minutes(duration_minutes);
-        let to = Self::format_datetime(end_time);
+        let ft: String = Self::format_datetime(start_time);
+        let end_time: DateTime<Local> = start_time + Duration::minutes(duration_minutes);
+        let to: String = Self::format_datetime(end_time);
 
         // ストリームURLの作成
-        let stream_url = format!(
+        let stream_url: String = format!(
             "https://radiko.jp/v2/api/ts/playlist.m3u8?station_id={}&l=15&ft={}&to={}",
             station_id, ft, to
         );
-        println!("stream_url: {}", stream_url);
 
         // ffmpeg用のヘッダー（ここではX-Radiko-AuthTokenを指定）
-        let auth_token = self
+        let auth_token: &String = self
             .headers
             .get("X-Radiko-AuthToken")
             .ok_or("Missing X-Radiko-AuthToken")?;
-        let header_arg = format!("X-RADIKO-AUTHTOKEN: {}", auth_token);
+        let header_arg: String = format!("X-RADIKO-AUTHTOKEN: {}", auth_token);
 
         info!("Recording {}...", output_path);
 
-        // ffmpegコマンドの実行（-y は上書きオプション）
-        let status = Command::new("ffmpeg")
+        // ffmpegコマンドを実行して録音
+        let status: ExitStatus = Command::new("ffmpeg")
             .args(&[
                 "-headers",
                 &header_arg,
@@ -106,9 +106,9 @@ impl RadikoPlayer {
     /// # 戻り値
     /// 放送局情報のベクター
     pub fn get_station_list(&self) -> Result<Vec<Station>, Box<dyn Error>> {
-        let url = format!("https://radiko.jp/v3/station/list/{}.xml", self.area_id);
-        let resp = reqwest::blocking::get(&url)?;
-        let content = resp.text()?;
+        let url: String = format!("https://radiko.jp/v3/station/list/{}.xml", self.area_id);
+        let resp: reqwest::blocking::Response = reqwest::blocking::get(&url)?;
+        let content: String = resp.text()?;
 
         // XMLパース（quick-xml + serde を使用）
         let station_list: StationList = from_str(&content)?;
@@ -117,9 +117,9 @@ impl RadikoPlayer {
 
     /// 認可済みのヘッダを取得する
     fn make_headers(area_id: &str) -> HashMap<String, String> {
-        let auth_handler = RadikoAuthHandler::new(area_id)
+        let auth_handler: RadikoAuthHandler = RadikoAuthHandler::new(area_id)
             .expect("Radiko authentication failed");
-        let mut headers = auth_handler.get_authenticated_headers();
+        let mut headers: HashMap<String, String> = auth_handler.get_authenticated_headers();
         headers.insert("Connection".to_string(), "keep-alive".to_string());
         debug!("headers: {:?}", headers);
         headers

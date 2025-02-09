@@ -14,7 +14,6 @@ pub struct RadikoAuthHandler {
 }
 
 impl RadikoAuthHandler {
-    // 定数の定義
     const AUTH1_URL: &'static str = "https://radiko.jp/v2/api/auth1";
     const AUTH2_URL: &'static str = "https://radiko.jp/v2/api/auth2";
     /// Radiko の認可キー（固定値）
@@ -24,7 +23,7 @@ impl RadikoAuthHandler {
     /// `area_id` に指定されたエリアIDを使い、認可処理を実行する。
     pub fn new(area_id: &str) -> Result<Self, Box<dyn Error>> {
         // 初期ヘッダの設定
-        let mut headers = HashMap::new();
+        let mut headers: HashMap<String, String> = HashMap::new();
         headers.insert("User-Agent".to_string(), "python3.7".to_string());
         headers.insert("Accept".to_string(), "*/*".to_string());
         headers.insert("X-Radiko-App".to_string(), "pc_html5".to_string());
@@ -35,7 +34,7 @@ impl RadikoAuthHandler {
         headers.insert("X-Radiko-Partialkey".to_string(), "".to_string());
         headers.insert("X-Radiko-AreaId".to_string(), area_id.to_string());
 
-        let mut handler = RadikoAuthHandler { headers };
+        let mut handler: RadikoAuthHandler = RadikoAuthHandler { headers };
         // 認可処理（auth1 → auth2）を実行
         handler.auth()?;
         Ok(handler)
@@ -52,10 +51,10 @@ impl RadikoAuthHandler {
     /// 2. 取得した情報をヘッダに設定後、AUTH2 API を呼び出す。
     fn auth(&mut self) -> Result<(), Box<dyn Error>> {
         // AUTH1 API 呼び出し
-        let res = self.call_auth_api(Self::AUTH1_URL)?;
+        let res: Response = self.call_auth_api(Self::AUTH1_URL)?;
         // レスポンスから認可用トークンと部分鍵を取得
-        let auth_token = self.get_auth_token(&res)?;
-        let partial_key = self.get_partial_key(&res)?;
+        let auth_token: String = self.get_auth_token(&res)?;
+        let partial_key: String = self.get_partial_key(&res)?;
         self.headers.insert("X-Radiko-AuthToken".to_string(), auth_token);
         self.headers.insert("X-Radiko-Partialkey".to_string(), partial_key);
 
@@ -72,11 +71,11 @@ impl RadikoAuthHandler {
     /// タイムアウトは 5 秒、リクエスト後に 1 秒のスリープを行う。
     fn call_auth_api(&self, api_url: &str) -> Result<Response, Box<dyn Error>> {
         // タイムアウト付きのクライアントを作成
-        let client = Client::builder()
+        let client: Client = Client::builder()
             .timeout(Duration::from_secs(5))
             .build()?;
         // self.headers (HashMap) を HeaderMap に変換
-        let mut header_map = HeaderMap::new();
+        let mut header_map: HeaderMap = HeaderMap::new();
         for (key, value) in &self.headers {
             header_map.insert(
                 HeaderName::from_bytes(key.as_bytes())?,
@@ -84,7 +83,7 @@ impl RadikoAuthHandler {
             );
         }
         // GET リクエストを送信
-        let res = client.get(api_url)
+        let res: Response = client.get(api_url)
             .headers(header_map)
             .send()?;
         // リクエスト後、1 秒待機
@@ -111,11 +110,11 @@ impl RadikoAuthHandler {
     /// レスポンスヘッダから部分鍵用の情報を取得し、  
     /// 固定の認可キーから指定範囲のバイト列を Base64 エンコードして返す
     fn get_partial_key(&self, response: &Response) -> Result<String, Box<dyn Error>> {
-        let key_length = match response.headers().get("X-Radiko-KeyLength") {
+        let key_length: usize = match response.headers().get("X-Radiko-KeyLength") {
             Some(val) => val.to_str()?.parse::<usize>()?,
             None => return Err("Missing X-Radiko-KeyLength header".into()),
         };
-        let key_offset = match response.headers().get("X-Radiko-KeyOffset") {
+        let key_offset: usize = match response.headers().get("X-Radiko-KeyOffset") {
             Some(val) => val.to_str()?.parse::<usize>()?,
             None => return Err("Missing X-Radiko-KeyOffset header".into()),
         };
@@ -123,8 +122,8 @@ impl RadikoAuthHandler {
         if key_offset + key_length > Self::RADIKO_AUTH_KEY.len() {
             return Err("Key offset and length out of bounds".into());
         }
-        let slice = &Self::RADIKO_AUTH_KEY[key_offset .. key_offset + key_length];
-        let partial_key = general_purpose::STANDARD.encode(slice);
+        let slice: &[u8] = &Self::RADIKO_AUTH_KEY[key_offset .. key_offset + key_length];
+        let partial_key: String = general_purpose::STANDARD.encode(slice);
         Ok(partial_key)
     }
 }
