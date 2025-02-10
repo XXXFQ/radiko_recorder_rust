@@ -1053,7 +1053,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "radiko_recorder_rust"
+name = "radiko_recorder"
 version = "0.1.0"
 dependencies = [
  "base64",
