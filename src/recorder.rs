@@ -110,7 +110,7 @@ impl RadikoPlayer {
         let resp: reqwest::blocking::Response = reqwest::blocking::get(&url)?;
         let content: String = resp.text()?;
 
-        // XMLパース（quick-xml + serde を使用）
+        // XMLパース
         let station_list: StationList = from_str(&content)?;
         Ok(station_list.stations)
     }

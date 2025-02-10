@@ -63,7 +63,7 @@ impl RadikoAuthHandler {
         debug!("authenticated headers: {:?}", self.headers);
         debug!("auth2 response headers: {:?}", res2.headers());
         let content = res2.text()?;
-        debug!("auth2 response content: {}", content);
+        debug!("auth2 response content: {}", content.replace("\n", ""));
         Ok(())
     }
 

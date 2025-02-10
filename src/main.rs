@@ -1,25 +1,26 @@
-mod recorder;
 mod auth_handler;
-//mod config;
+mod config;
+mod logger;
+mod recorder;
 
+use chrono::{Local, DateTime, NaiveDateTime, TimeZone};
+use clap::{ArgAction, Parser, CommandFactory};
+use regex::Regex;
 use std::error::Error;
 use std::fs;
 use std::path::Path;
 use std::process;
 
-use chrono::{Local, DateTime, NaiveDateTime, TimeZone};
-use clap::{ArgAction, Parser, CommandFactory};
-use regex::Regex;
-
+use crate::config::RADIKO_AREA_ID;
+use crate::logger::setup_logger;
 use crate::recorder::RadikoPlayer;
-//use crate::config::RADIKO_AREA_ID;
 
 /// コマンドライン引数を表す構造体
 #[derive(Parser, Debug)]
 #[command(author, version, about = "Radiko Recorder", long_about = None)]
 struct Args {
     /// エリアID (例: JP13, JP27, etc.)
-    #[arg(short, long, default_value = "JP13")]
+    #[arg(short, long, default_value = RADIKO_AREA_ID)]
     area_id: String,
 
     /// 放送局リストを表示する
@@ -37,11 +38,16 @@ struct Args {
     duration_minutes: i32,
 }
 
-/// エリアIDの正規表現パターンに合致しているかチェックする
+/// エリアIDが正しい形式（JP13～JP47）かチェックする
 fn is_valid_area_id(area_id: &str) -> bool {
-    // パターン例: JP13, JP27, … JP47 など（JP + 数値）
     let re: Regex = Regex::new(r"^JP([1-9]|[1-3][0-9]|4[0-7])$").unwrap();
     re.is_match(area_id)
+}
+
+/// 放送局IDが正しい形式（大文字の英数字のみ）かチェックする
+fn is_valid_station_id(station_id: &str) -> bool {
+    let re: Regex = Regex::new(r"^[A-Z0-9]+$").unwrap();
+    re.is_match(station_id)
 }
 
 /// 放送局リストを表示する
@@ -52,7 +58,6 @@ fn show_station_list(area_id: &str) -> Result<(), Box<dyn Error>> {
 
     let player: RadikoPlayer = RadikoPlayer::new(area_id);
     let station_list: Vec<recorder::Station> = player.get_station_list()?;
-
     for station in station_list {
         println!(
             "Station: id={}, name={}, ascii_name={}, ruby={}",
@@ -63,9 +68,20 @@ fn show_station_list(area_id: &str) -> Result<(), Box<dyn Error>> {
 }
 
 /// ラジオを録音する処理
-fn record_radio(area_id: &str, station_id: &str, start_time_str: &str, duration_minutes: i64) -> Result<(), Box<dyn Error>> {
+fn record_radio(
+    area_id: &str,
+    station_id: &str,
+    start_time_str: &str,
+    duration_minutes: i64,
+) -> Result<(), Box<dyn Error>> {
     if !is_valid_area_id(area_id) {
         return Err(format!("Invalid area ID: {}", area_id).into());
+    }
+    if !is_valid_station_id(station_id) {
+        return Err(format!("Invalid station ID: {}", station_id).into());
+    }
+    if duration_minutes <= 0 {
+        return Err("Duration minutes must be positive".into());
     }
 
     // 出力ディレクトリ "output" を作成（存在しなければ）
@@ -75,20 +91,33 @@ fn record_radio(area_id: &str, station_id: &str, start_time_str: &str, duration_
     }
     // 現在時刻を付与して出力ファイル名を生成
     let timestamp: String = Local::now().format("%Y%m%d%H%M%S").to_string();
-    let output_file: std::path::PathBuf = output_dir.join(format!("{}_{}.aac", station_id, timestamp));
+    let output_file: std::path::PathBuf =
+        output_dir.join(format!("{}_{}.aac", station_id, timestamp));
 
     // 開始時刻の文字列をパースする
     let naive_dt: NaiveDateTime = NaiveDateTime::parse_from_str(start_time_str, "%Y%m%d%H%M%S")?;
-    let start_time: DateTime<Local> = Local.from_local_datetime(&naive_dt)
+    let start_time: DateTime<Local> = Local
+        .from_local_datetime(&naive_dt)
         .single()
         .ok_or("Failed to convert start time")?;
 
     let player: RadikoPlayer = RadikoPlayer::new(area_id);
-    player.record(station_id, start_time, duration_minutes, output_file.to_str().unwrap())?;
+    player.record(
+        station_id,
+        start_time,
+        duration_minutes,
+        output_file.to_str().unwrap(),
+    )?;
     Ok(())
 }
 
 fn main() {
+    // ロガーを初期化
+    if let Err(e) = setup_logger() {
+        eprintln!("Failed to initialize logger: {}", e);
+        process::exit(1);
+    }
+
     // コマンドライン引数を解析
     let args: Args = Args::parse();
 

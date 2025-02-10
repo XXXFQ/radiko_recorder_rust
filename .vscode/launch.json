@@ -7,7 +7,7 @@
             "name": "Rust Debug Launch",
             "program": "${workspaceRoot}/target/debug/${workspaceRootFolderName}",
             "args": [
-                "-a", "JP13", "FMT", "20250207120000", "30"
+                "-a", "JP13", "FMT", "20250210120000", "30"
             ],
             "cwd": "${workspaceRoot}/target/debug/",
             "sourceLanguages": ["rust"]
