@@ -45,7 +45,7 @@ radiko_recorder_rust --station-list
 指定した放送局からラジオ放送を録音するには、以下の形式でコマンドを実行します。
 
 ```sh
-radiko_recorder_rust <station_id> <start_time> <duration_minutes>
+radiko_recorder <station_id> <start_time> <duration_minutes>
 ```
 
 - `<station_id>`: 録音対象の放送局の ID (例: `TBS`, `QRR` など)  
@@ -54,7 +54,7 @@ radiko_recorder_rust <station_id> <start_time> <duration_minutes>
 
 **例:**
 ```sh
-radiko_recorder_rust FMT 20241120120000 50
+radiko_recorder FMT 20241120120000 50
 ```
 
 上記の例では、2024年11月20日12:00:00 から 50 分間、TOKYO FM の放送を録音します。
@@ -71,7 +71,7 @@ cd radiko_recorder_rust
 cargo build --release
 ```
 
-ビルドが完了すると、実行ファイルは `target/release/radiko_recorder_rust` に生成されます。
+ビルドが完了すると、実行ファイルは `target/release` に生成されます。
 
 ## ログ出力
 

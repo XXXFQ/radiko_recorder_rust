@@ -25,10 +25,19 @@ pub fn setup_logger() -> Result<(), Box<dyn std::error::Error>> {
         .warn(Color::Yellow)
         .error(Color::Red);
     
+    // ビルドモードに応じてログレベルを切り替え
+    let log_level = if cfg!(debug_assertions) {
+        // デバッグビルドのときは詳細なログを出力
+        log::LevelFilter::Debug
+    } else {
+        // リリースビルドのときは Info 以上のみ出力
+        log::LevelFilter::Info
+    };
+
     // fern の Dispatch を使ってロガーを設定
     Dispatch::new()
         // ログレベルを Debug 以上に設定
-        .level(log::LevelFilter::Info)
+        .level(log_level)
         // ファイル出力（非カラー、フォーマット: "YYYY-MM-DD HH:MM:SS LEVEL   target message"）
         .chain(
             Dispatch::new()
