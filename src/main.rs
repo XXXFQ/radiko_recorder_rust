@@ -1,25 +1,26 @@
-mod recorder;
 mod auth_handler;
-//mod config;
+mod config;
+mod logger;
+mod recorder;
 
+use chrono::{Local, DateTime, NaiveDateTime, TimeZone};
+use clap::{ArgAction, Parser, CommandFactory};
+use regex::Regex;
 use std::error::Error;
 use std::fs;
 use std::path::Path;
 use std::process;
 
-use chrono::{Local, DateTime, NaiveDateTime, TimeZone};
-use clap::{ArgAction, Parser, CommandFactory};
-use regex::Regex;
-
+use crate::config::RADIKO_AREA_ID;
+use crate::logger::setup_logger;
 use crate::recorder::RadikoPlayer;
-//use crate::config::RADIKO_AREA_ID;
 
 /// コマンドライン引数を表す構造体
 #[derive(Parser, Debug)]
 #[command(author, version, about = "Radiko Recorder", long_about = None)]
 struct Args {
     /// エリアID (例: JP13, JP27, etc.)
-    #[arg(short, long, default_value = "JP13")]
+    #[arg(short, long, default_value = RADIKO_AREA_ID)]
     area_id: String,
 
     /// 放送局リストを表示する
@@ -89,6 +90,12 @@ fn record_radio(area_id: &str, station_id: &str, start_time_str: &str, duration_
 }
 
 fn main() {
+    // ロガーを初期化
+    if let Err(e) = setup_logger() {
+        eprintln!("Failed to initialize logger: {}", e);
+        std::process::exit(1);
+    }
+
     // コマンドライン引数を解析
     let args: Args = Args::parse();
 
