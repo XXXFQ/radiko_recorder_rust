@@ -28,7 +28,7 @@ pub fn setup_logger() -> Result<(), Box<dyn std::error::Error>> {
     // fern の Dispatch を使ってロガーを設定
     Dispatch::new()
         // ログレベルを Debug 以上に設定
-        .level(log::LevelFilter::Debug)
+        .level(log::LevelFilter::Info)
         // ファイル出力（非カラー、フォーマット: "YYYY-MM-DD HH:MM:SS LEVEL   target message"）
         .chain(
             Dispatch::new()
