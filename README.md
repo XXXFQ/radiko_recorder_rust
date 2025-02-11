@@ -37,7 +37,7 @@ Rust の高速性と安全性を活かして実装されており、シンプル
 放送局リストを表示するには、`--station-list` オプションを利用します。
 
 ```sh
-radiko_recorder_rust --station-list
+radiko_recorder --station-list
 ```
 
 ### 放送局の録音

@@ -18,7 +18,7 @@ pub fn setup_logger() -> Result<(), Box<dyn std::error::Error>> {
     // ログファイルのパス：logs/YYYY-MM-DD.log
     let log_file: PathBuf  = log_dir.join(format!("{}.log", Local::now().format("%Y-%m-%d")));
     
-    // コンソール出力用の色設定（Python の colorlog の設定に似せる）
+    // コンソール出力用の色設定
     let colors: ColoredLevelConfig = ColoredLevelConfig::new()
         .debug(Color::Cyan)
         .info(Color::BrightBlue)
@@ -27,18 +27,15 @@ pub fn setup_logger() -> Result<(), Box<dyn std::error::Error>> {
     
     // ビルドモードに応じてログレベルを切り替え
     let log_level = if cfg!(debug_assertions) {
-        // デバッグビルドのときは詳細なログを出力
         log::LevelFilter::Debug
     } else {
-        // リリースビルドのときは Info 以上のみ出力
         log::LevelFilter::Info
     };
 
-    // fern の Dispatch を使ってロガーを設定
+    // ロガーを設定
     Dispatch::new()
-        // ログレベルを Debug 以上に設定
         .level(log_level)
-        // ファイル出力（非カラー、フォーマット: "YYYY-MM-DD HH:MM:SS LEVEL   target message"）
+        // ファイル出力
         .chain(
             Dispatch::new()
                 .format(|out, message, record| {
@@ -52,20 +49,19 @@ pub fn setup_logger() -> Result<(), Box<dyn std::error::Error>> {
                 })
                 .chain(fern::log_file(log_file)?)
         )
-        // コンソール出力（カラー付き）
+        // コンソール出力
         .chain(
             Dispatch::new()
                 .format(move |out, message, record| {
                     out.finish(format_args!(
-                        "{} {:<8} {} {}{}",
+                        "{} {} {} {}",
                         Local::now().format("%Y-%m-%d %H:%M:%S"),
                         colors.color(record.level()),
                         record.target(),
-                        message,
-                        "\x1B[0m" // ANSIリセットコードを追加
+                        message
                     ))
                 })
-                .chain(std::io::stderr())
+                .chain(std::io::stdout())
         )
         .apply()?;
     Ok(())
