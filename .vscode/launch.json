@@ -5,7 +5,7 @@
             "type": "lldb",
             "request": "launch",
             "name": "Rust Debug Launch",
-            "program": "${workspaceRoot}/target/debug/${workspaceRootFolderName}",
+            "program": "${workspaceRoot}/target/debug/radiko_recorder.exe",
             "args": [
                 "-a", "JP13", "FMT", "20250210120000", "30"
             ],
